@@ -1,32 +1,51 @@
 import praw
 
 def bot_login():
-             r = praw.Reddit(client_id='ougxKi-FzIOTPQ',
+             reddit = praw.Reddit(client_id='ougxKi-FzIOTPQ',
                      client_secret='ThKbnVIp-xWzDxgQA0Rer-tFcDY',
-                     user_agent='/u/f_amin_2',
+                     user_agent='/u/CommentCheckBot',
                      password="Hamburg040",
-                     username="f_amin_2")
-             return r
+                     username="CommentCheckBot")
+             return reddit
 
 def run_bot(r):
     links_list=[]
-    for comment in r.subreddit('all').comments(limit=25):
-        if "u/f_amin_2" in comment.body:
-            print ("Gefunden")
-            comment_body="u/f_amin_2 u/_1234: Hallo"
-            username=comment_body.replace("u/f_amin_2", "")
-            username=username.split(":",1)[0].lstrip()
-            term=comment_body.replace("u/f_amin_2", "")
-            term=comment_body.split(":")[1].lstrip()
-            for submission in reddit.redditor(username).comments.top("all"):
-                if term in comment_body:
-                    links_list.append("https://www.reddit.com/r/" + str(comment.subreddit) + "/comments/" + comment.link_id[3:])
-                    x=x+1
-            if x.equals(0):
-                comment.reply("Thank you for your request.\n"+username+"never said"+term+".\n______________________________________________________________\n^Feedback? ^Go ^to ^r/CommentHistoryCheck")
-            if x.equals(1):
-                comment.reply("Thank you for your request.\n"+username+"said"+term+"once. Here is the link:\n"+links_list+"\n_________________________________________________________________\n^Feedback? ^Go ^to ^r/CommentHistoryCheck")
+    for comment in r.subreddit('CommentCheckBot').comments(limit=None):
+        if "u/CommentCheckBot" in comment.body:
+            if not comment.saved:
+                comment.save()
+                kommentar=comment
+                print("Gefunden")
+                username=comment.body.replace("u/CommentCheckBot", "", 1)
+                if "u/" in username:
+                    username=username.replace("u/", "")
+                    username=username.split(":",1)[0].lstrip()
+                    print(username)
+                    term=comment.body.replace("u/CommentCheckBot", "", 1)
+                    term=term.replace(username, "")
+                    term=term.replace("u/", "")
+                    term=term.replace(" : ", "")
+                    term=" "+term+" "
+                    print(term)
+                    for comment in reddit.redditor(username).comments.top(limit=None):
+                        if term in comment.body:
+                            links_list.append("https://www.reddit.com/r/" + str(comment.subreddit) + "/comments/" + comment.link_id[3:])
+                            list_length=len(links_list)
+                    if list_length == 0:
+                        kommentar.reply("Thank you for your request.\n"+username+" didn't say"+str(term)+" in his top 1000 comments.\n______________________________________________________________\n^Feedback? Go to r/CommentHistoryCheck")
+                        print("Done")
+                    if list_length == 1:
+                        print( ", ".join( repr(e) for e in links_list ) )
+                        kommentar.reply("Thank you for your request.\nu/"+username+" said "+str(term)+" once. Here is the link:\n"+str(links_list)[1:-1]+"\n_________________________________________________________________\n^Feedback? Go to r/CommentCheckBot")
+                        print("Done")
+                        links_list.clear()
+                    else:
+                        print( ", ".join( repr(e) for e in links_list ) )
+                        kommentar.reply("Thank you for your request.\nu/"+username+" said "+str(term)+" "+str(list_length)+" times. Here are the links:\n"+str(links_list)[1:-1]+"\n_________________________________________________________________\nFeedback? Go to r/CommentCheckBot")
+                        print("Done")
+                        links_list.clear()
             else:
-                comment.reply("Thank you for your request.\n"+username+"said"+term+x+"-times. Here are the links:\n"+links_list+"\n_________________________________________________________________\n^Feedback? ^Go ^to ^r/CommentHistoryCheck")
-r = bot_login()
-run_bot(r)
+                print("schon gemacht")
+
+reddit = bot_login()
+run_bot(reddit)
